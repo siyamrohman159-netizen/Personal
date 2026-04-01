@@ -1,9 +1,9 @@
 module.exports = {
   config: {
     name: "fork",
-    aliases: ["repo", "source"],
+    aliases: ["repo", "git"],
     version: "1.0",
-    author: "NeoKEX",
+    author: "siyuuu",
     countDown: 3,
     role: 0,
     longDescription: "Returns the link to the official, updated fork of the bot's repository.",
@@ -12,9 +12,9 @@ module.exports = {
   },
 
   onStart: async function({ message }) {
-    const text = "✓ | Here is the updated repository:\n\nhttps://github.com/NeoKEX/Goatbot-updated.git\n\n" +
-                 "Changes:\n1. No Google Credentials needed\n2. Enhanced overall performance\n3. Now using @neoaz07/nkxfca(v1.0.9)\n4. Working on all groups\n5. Id Ban Issue solved 90% and running for a long time (No logout issue)\n\nNB: If you want to use @neoaz07/nkxfca please install by typing: npm i @neoaz07/nkxfca@latest\n\n" +
-                 "Keep supporting^_^";
+    const text = "✓ | Here is the updated fork:\n\nhttps://github.com/siyuuu-x1/maiko_main_goatv2\n\n" +
+                 "Changes:\n all fixed \n\n" +
+                 "🚩⚙️🔓";
     
     message.reply(text);
   }

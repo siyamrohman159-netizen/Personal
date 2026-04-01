@@ -1,104 +1,98 @@
-const fs = require("fs-extra");
-const path = require("path");
+const { getPrefix } = global.utils;
+const { commands } = global.GoatBot;
 
 module.exports = {
-	config: {
-		name: "help",
-		aliases: ["menu", "commands"],
-		version: "4.8",
-		author: "NeoKEX",
-		shortDescription: "Show all available commands",
-		longDescription: "Displays a clean and premium-styled categorized list of commands.",
-		category: "system",
-		guide: "{pn}help [command name]"
-	},
+  config: {
+    name: "help",
+    aliases: ["h"],
+    version: "5.0",
+    author: "Siyuu 🎀",
+    role: 0,
+    shortDescription: "Show help menu",
+    longDescription: "Show all commands or command detail",
+    category: "info",
+    guide: "{pn} | {pn} <command>"
+  },
 
-	onStart: async function ({ message, args, prefix }) {
-		const allCommands = global.GoatBot.commands;
-		const categories = {};
+  onStart: async function({ message, event, args }) {
+    const prefix = await getPrefix(event.threadID);
 
-		const emojiMap = {
-			ai: "➥", "ai-image": "➥", group: "➥", system: "➥",
-			fun: "➥", owner: "➥", config: "➥", economy: "➥",
-			media: "➥", "18+": "➥", tools: "➥", utility: "➥",
-			info: "➥", image: "➥", game: "➥", admin: "➥",
-			rank: "➥", boxchat: "➥", others: "➥"
-		};
+    // ===== COMMAND DETAIL =====
+    if (args[0]) {
+      const cmdName = args[0].toLowerCase();
+      const cmd =
+        commands.get(cmdName) ||
+        [...commands.values()].find(c =>
+          c.config.aliases?.includes(cmdName)
+        );
 
-		const cleanCategoryName = (text) => {
-			if (!text) return "others";
-			return text
-				.normalize("NFKD")
-				.replace(/[^\w\s-]/g, "")
-				.replace(/\s+/g, " ")
-				.trim()
-				.toLowerCase();
-		};
+      if (!cmd) return message.reply(`❌ Command "${cmdName}" not found.`);
 
-		for (const [name, cmd] of allCommands) {
-			const cat = cleanCategoryName(cmd.config.category);
-			if (!categories[cat]) categories[cat] = [];
-			categories[cat].push(cmd.config.name);
-		}
+      const { name, category, version, author, countDown, shortDescription, longDescription, guide } = cmd.config;
 
+      const desc =
+        typeof longDescription === "string"
+          ? longDescription
+          : longDescription?.en || shortDescription?.en || "No description";
 
-		if (args[0]) {
-			const query = args[0].toLowerCase();
-			const cmd =
-				allCommands.get(query) ||
-				[...allCommands.values()].find((c) => (c.config.aliases || []).includes(query));
-			if (!cmd) return message.reply(`❌ Command "${query}" not found.`);
+      const usage =
+        typeof guide === "string"
+          ? guide.replace(/{pn}/g, `${prefix}${name}`)
+          : guide?.en?.replace(/{pn}/g, `${prefix}${name}`) || `${prefix}${name}`;
 
-			const {
-				name,
-				version,
-				author,
-				guide,
-				category,
-				shortDescription,
-				longDescription,
-				aliases,
-				role 
-			} = cmd.config;
+      const box = 
+`✦『 🌸 ${name.toUpperCase()} 🌸 』✦
+✦ Category: ${category || "Uncategorized"} ✦
+✦ Version: ${version || "1.0"} ✦
+✦ Author: ${author || "Unknown"} ✦
+✦ Cooldown: ${countDown || 0}s ✦
 
-			const desc =
-				typeof longDescription === "string"
-					? longDescription
-					: longDescription?.en || shortDescription?.en || shortDescription || "No description";
+📘 Description: ${desc}
+📗 Usage: ${usage}`;
 
-			const usage =
-				typeof guide === "string"
-					? guide.replace(/{pn}/g, prefix)
-					: guide?.en?.replace(/{pn}/g, prefix) || `${prefix}${name}`;
+      return message.reply(box);
+    }
 
-						const requiredRole = cmd.config.role !== undefined ? cmd.config.role : 0; 
+    // ===== FULL HELP MENU =====
+    const botName = "MAIKO";
+    const creator = "SIYUU";
 
-			return message.reply(
-				`☠️ 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗜𝗡𝗙𝗢 ☠️\n\n` +
-				`➥ Name: ${name}\n` +
-				`➥ Category: ${category || "Uncategorized"}\n` +
-				`➥ Description: ${desc}\n` +
-				`➥ Aliases: ${aliases?.length ? aliases.join(", ") : "None"}\n` +
-				`➥ Usage: ${usage}\n` +
-				`➥ Permission: ${requiredRole}\n` + 
-				`➥ Author: ${author}\n` +
-				`➥ Version: ${version}`
-			);
-		}
+    // Collect commands by category
+    const categories = {};
+    for (const cmd of commands.values()) {
+      if (cmd.config.role > 1) continue; // skip admin/mod only
+      const cate = cmd.config.category || "OTHER";
+      if (!categories[cate]) categories[cate] = [];
+      categories[cate].push(cmd.config.name);
+    }
 
-		const formatCommands = (cmds) =>
-			cmds.sort().map((cmd) => `× ${cmd}`);
+    // Build menu text
+    let text = 
+`✦『 maiko goatbot 』✦
+✦ AI ✦
+✦ HELP MENU ✦
+`;
 
-		let msg = `━━━☠️ 𝗡𝗲𝗼𝗞𝗘𝗫 𝗔𝗜 ☠️━━━\n`;
-		const sortedCategories = Object.keys(categories).sort();
-		for (const cat of sortedCategories) {
-			const emoji = emojiMap[cat] || "➥";
-			msg += `\n╭──『 ${cat.toUpperCase()} 』\n`; 
-			msg += `${formatCommands(categories[cat]).join(' ')}\n`; 
-			msg += `╰────────────◊\n`;
-		}
-		msg += `\n➥ Use: ${prefix}help [command name] for details\n➥Use: ${prefix}callad to talk with bot admins '_'`;
+    for (const cate of Object.keys(categories).sort()) {
+      text += `\n〔 ${cate.toUpperCase()} 〕\n`;
+      for (const name of categories[cate].sort()) {
+        text += `⌬ ${name.toUpperCase()}  `;
+      }
+      text += `\n`;
+    }
 
-		return message.reply(msg);
-	}
+    text += `
+✦ TOTAL: ${commands.size}
+✦ PREFIX: ${prefix || "/"}
+✦ OWNER: ${creator}
+`;
+
+    return message.reply(text);
+  },
+
+  onChat: async function({ event, message }) {
+    if (event.body?.toLowerCase().trim() === "help") {
+      return this.onStart({ message, event, args: [] });
+    }
+  }
 };

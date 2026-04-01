@@ -3,10 +3,10 @@ const fs = require("fs-extra");
 module.exports = {
         config: {
                 name: "restart",
-                version: "1.2",
-                author: "NTKhang",
+                version: "1.1",
+                author: "siyuuu",
                 countDown: 5,
-                role: 4,
+                role: 2,
                 description: {
                         vi: "Khởi động lại bot",
                         en: "Restart bot"
